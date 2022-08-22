@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ParkingControllerIntegrationTest {
+class ParkingControllerIntegrationTest extends AbstractContainerBase {
 
     @LocalServerPort
     private int randomPort;
