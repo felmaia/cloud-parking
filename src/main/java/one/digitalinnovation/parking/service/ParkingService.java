@@ -1,19 +1,19 @@
 package one.digitalinnovation.parking.service;
 
+import one.digitalinnovation.parking.exception.ParkingNotFoundException;
 import one.digitalinnovation.parking.model.Parking;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ParkingService {
 
-    private static Map<String, Parking> parkingMap = new HashMap<>();
+    private static Map<String, Parking> parkingMap = new LinkedHashMap<>();
 
     static {
         var id= getUUID();
@@ -33,7 +33,10 @@ public class ParkingService {
     }
 
     public Parking findById(String id) {
-        return parkingMap.get(id);
+        Parking parking = parkingMap.get(id);
+        if (parking == null)
+            throw new ParkingNotFoundException(id);
+        return parking;
     }
 
     public Parking create(Parking parkingCreate) {
@@ -42,5 +45,32 @@ public class ParkingService {
         parkingCreate.setEntryDate(LocalDateTime.now());
         parkingMap.put(uuid, parkingCreate);
         return parkingCreate;
+    }
+
+    public void delete(String id) {
+        findById(id);
+        parkingMap.remove(id);
+    }
+
+    public Parking update(String id, Parking parkingCreate) {
+        Parking parking = findById(id);
+        parking.setColor(parkingCreate.getColor());
+        parkingMap.replace(id, parking);
+        return parking;
+    }
+
+    public Parking exit(String id) {
+        Parking parking = findById(id);
+        parking.setExitDate(LocalDateTime.now());
+        parking.setBill(calculateBill(parking));
+        return parking;
+    }
+
+    private Double calculateBill(Parking parking) {
+        LocalDateTime tempDateTime = parking.getEntryDate();
+        long hours = tempDateTime.until( parking.getExitDate(), ChronoUnit.HOURS );
+        //tempDateTime = tempDateTime.plusHours( hours );
+        if (hours <= 1) hours = 1;
+        return Double.valueOf(10 * hours);
     }
 }
